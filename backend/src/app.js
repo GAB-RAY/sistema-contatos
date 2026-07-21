@@ -7,6 +7,9 @@ const ambiente = require('./configuracoes/ambiente');
 const { testarConexaoBanco } = require('./configuracoes/banco');
 const criarOpcoesCors = require('./configuracoes/cors');
 const criarAutenticacaoRoutes = require('./modulos/autenticacao/autenticacaoRoutes');
+const criarBairroRoutes = require('./modulos/bairros/bairroRoutes');
+const criarOrigemRoutes = require('./modulos/origens/origemRoutes');
+const criarProblemaRoutes = require('./modulos/problemas/problemaRoutes');
 const criarSaudeRoutes = require('./modulos/saude/saudeRoutes');
 const criarUsuarioRoutes = require('./modulos/usuarios/usuarioRoutes');
 const tratarRotaNaoEncontrada = require('./middlewares/tratarRotaNaoEncontrada');
@@ -56,6 +59,9 @@ function criarApp(opcoes) {
     loginMaximo: configuracao.loginMaximo
   }));
   app.use('/usuarios', criarUsuarioRoutes());
+  app.use('/bairros', criarBairroRoutes());
+  app.use('/problemas', criarProblemaRoutes());
+  app.use('/origens', criarOrigemRoutes());
 
   app.use(tratarRotaNaoEncontrada);
   app.use(tratarErro);
