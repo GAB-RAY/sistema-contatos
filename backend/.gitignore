@@ -2,11 +2,8 @@ node_modules/
 .env
 .env.*
 !.env.example
-dist/
 coverage/
+dist/
 uploads/*
-!backend/uploads/.gitkeep
+!uploads/.gitkeep
 *.log
-.DS_Store
-Thumbs.db
-.vscode/
