@@ -2,89 +2,127 @@
 
 ## Etapa atual
 
-**Etapa 1 — Fundação: concluída tecnicamente e aguardando aprovação.**
+**Etapa 2 — Conexão e verificação das 14 tabelas: concluída e aguardando aprovação.**
 
-A Etapa 2 não foi iniciada.
+A Etapa 3 não foi iniciada.
 
-## Entregas concluídas
+## Entregas da Etapa 2
 
-- [x] Pasta `backend` criada.
-- [x] Projeto Node.js inicializado com CommonJS.
-- [x] Estrutura modular criada dentro de `src`.
-- [x] Domínios futuros reservados em `src/modulos`, sem implementação antecipada.
-- [x] Express configurado.
-- [x] Classe `AppError` criada.
-- [x] Middleware central `tratarErro` criado.
-- [x] Helmet configurado.
-- [x] CORS configurado por lista explícita de origens.
-- [x] Limite configurável para corpo JSON aplicado.
-- [x] Rate limiting global básico aplicado.
-- [x] Rota `GET /saude` criada.
-- [x] Resposta JSON para rotas inexistentes configurada.
-- [x] Testes unitários e de integração preparados.
-- [x] Dependências mínimas instaladas e documentadas.
-- [x] `README.md` e `STATUS_PROJETO.md` atualizados.
+- [x] `.env` local criado e mantido fora do Git.
+- [x] `.env.example` atualizado sem senha real.
+- [x] Variáveis explícitas para host, porta, usuário, senha e nome do banco.
+- [x] Pacote `pg` instalado.
+- [x] Pool configurado em `src/configuracoes/banco.js`.
+- [x] Tratamento de erros sem credenciais ou string de conexão nos logs.
+- [x] Função nomeada `testarConexaoBanco` implementada com `SELECT NOW()`.
+- [x] Função `verificarTabelasBanco` implementada com consulta a `information_schema.tables`.
+- [x] Validação exata das 10 tabelas V1 e das 4 tabelas futuras.
+- [x] Comando `npm run banco:verificar` criado.
+- [x] Rota `GET /saude` atualizada com estado da aplicação e do banco.
+- [x] Resposta HTTP 503 segura quando o banco está indisponível.
+- [x] Testes obrigatórios implementados.
+- [x] README e status atualizados.
+- [x] Conexão real e confirmação das 14 tabelas no PostgreSQL local.
+
+## Tabelas esperadas
+
+### V1 — 10 tabelas
+
+`usuarios`, `bairros`, `problemas`, `origens_listas`, `contatos`, `importacoes`, `importacao_itens`, `consentimentos`, `tentativas_contato` e `historico_alteracoes`.
+
+### Futuras — 4 tabelas
+
+`campanhas`, `campanha_destinatarios`, `sessoes_whatsapp` e `mensagens_whatsapp`.
+
+A implementação somente verifica a existência dessas quatro tabelas. Nenhuma regra de negócio foi criada para elas.
 
 ## Validações executadas
 
-### Validação de sintaxe
+### Inspeção do script oficial
 
-- 13 arquivos JavaScript verificados com `node --check`.
-- Resultado: nenhum erro de sintaxe.
+- Confirmadas 14 instruções `CREATE TABLE` no arquivo oficial, sem executá-lo.
+- Confirmadas 10 tabelas V1 e 4 tabelas reservadas para a versão futura.
+- O script permaneceu inalterado.
 
-### Primeira execução automatizada
+### Primeira execução da suíte
 
-- Comando: `npm test`.
-- Resultado: 4 suítes aprovadas, 11 testes aprovados e 0 falhas.
-- Não houve erro funcional a corrigir.
+- 16 arquivos JavaScript aprovados pelo `node --check`.
+- `npm test`: 5 suítes, 16 testes aprovados e 0 falhas.
+- Foi identificado um registro duplicado de `pg` no `package.json`.
 
-### Segunda execução automatizada
+### Correção
 
-- Comando: `npm run test:coverage`.
-- Resultado: 4 suítes aprovadas, 11 testes aprovados e 0 falhas.
-- Cobertura total: 94,52% das instruções, 92,1% dos ramos, 85,71% das funções e 94,52% das linhas.
+- Removida a chave antiga duplicada.
+- Mantida somente a versão de `pg` efetivamente instalada.
+- Manifesto e lockfile sincronizados com `npm install`.
 
-### Validação final do fluxo real
+### Segunda execução da suíte
 
-- `src/server.js` iniciado temporariamente pela função `iniciarServidor`.
-- Requisição HTTP real enviada para `GET /saude`.
-- Resultado: HTTP 200 com `{"status":"ok"}`.
-- Regressão final com `npm test`: 4 suítes aprovadas, 11 testes aprovados e 0 falhas.
+- `npm run test:coverage`: 5 suítes, 16 testes aprovados e 0 falhas.
+- Cobertura: 81,06% das instruções, 73,33% dos ramos, 73,33% das funções e 81,06% das linhas.
+
+### Teste da falha real de configuração
+
+- `npm run banco:verificar` executado com `BANCO_SENHA` vazia.
+- O comando informou conexão indisponível e retornou código de saída 1.
+- O processo não foi encerrado silenciosamente.
+- Nenhuma senha, string de conexão ou SQL foi exposto.
+
+### Validação real do PostgreSQL
+
+- `npm run banco:verificar` executado após a configuração local da senha.
+- Conexão com PostgreSQL: disponível.
+- Tabelas públicas: 14/14.
+- Tabelas V1: 10/10.
+- Tabelas futuras: 4/4, com somente a existência verificada.
+- Estrutura do banco: válida.
+- Nenhuma tabela extra ou ausente.
+
+### Validação HTTP com o banco real
+
+- Aplicação iniciada temporariamente na porta 3188.
+- Requisição real enviada para `GET /saude`.
+- Resultado: HTTP 200 com aplicação e banco disponíveis.
+- Nenhuma credencial, SQL ou detalhe interno apareceu na resposta.
+
+### Regressão final
+
+- 16 arquivos JavaScript aprovados pelo `node --check`.
+- `npm test`: 5 suítes, 16 testes aprovados e 0 falhas.
+- `npm audit`: 0 vulnerabilidades encontradas.
+- `git diff --check`: nenhuma inconsistência encontrada.
+- `.env` confirmado como ignorado pelo Git.
+- Script SQL oficial confirmado como inalterado.
 
 ### Dependências
 
-- `npm audit` executado automaticamente durante a instalação.
-- Resultado: 0 vulnerabilidades encontradas.
+- `pg@8.22.0` instalado como dependência de produção.
+- Auditoria npm: 0 vulnerabilidades encontradas.
 
-## Dependências diretas desta etapa
+## Comandos registrados
 
-Produção:
+```text
+npm install pg
+node --check <arquivos JavaScript de src e testes>
+npm test
+npm install
+npm run test:coverage
+npm run banco:verificar
+psql ... -c "SELECT 1 AS conexao_valida;"
+```
 
-- `express`
-- `dotenv`
-- `helmet`
-- `cors`
-- `express-rate-limit`
+## Proibições respeitadas
 
-Desenvolvimento e testes:
-
-- `jest`
-- `supertest`
-
-## Itens deliberadamente não iniciados
-
-- conexão com PostgreSQL;
-- verificação das 14 tabelas;
-- autenticação e usuários;
-- módulos de negócio;
-- endpoint e lógica do formulário público;
-- importação CSV/XLSX;
-- frontend;
-- API do WhatsApp;
-- campanhas;
-- chatbox;
-- código para as quatro tabelas futuras.
+- nenhuma migration criada;
+- nenhum `CREATE TABLE`, `DROP TABLE` ou `ALTER TABLE` executado;
+- script SQL oficial não alterado;
+- banco existente não recriado;
+- autenticação não iniciada;
+- módulos de negócio não implementados;
+- frontend não criado;
+- tabelas futuras não receberam código de negócio;
+- Etapa 3 não iniciada.
 
 ## Próximo marco bloqueado por aprovação
 
-A Etapa 2 prevê conexão com o PostgreSQL e verificação das 14 tabelas. Nenhum trabalho desse marco deve começar antes da autorização explícita do responsável pelo projeto.
+A Etapa 3 prevê autenticação e usuários. Nenhum trabalho desse marco deve começar antes da autorização explícita do responsável pelo projeto.

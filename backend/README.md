@@ -1,144 +1,143 @@
 # Backend do Sistema de Contatos
 
-Fundação modular em Node.js e Express para o Sistema de Contatos. O projeto usa CommonJS e mantém cada domínio dentro de `src/modulos`, conforme o prompt mestre.
+Backend modular em Node.js, Express e CommonJS. Cada domínio permanece dentro de `src/modulos`, conforme o prompt mestre.
 
 ## Status atual
 
-A Etapa 1 — Fundação está implementada e validada. Nesta etapa não existe conexão com PostgreSQL, autenticação, regra de negócio, frontend ou integração externa.
+A Etapa 2 — Conexão e verificação do PostgreSQL está implementada e validada. A conexão real confirmou exatamente 14 tabelas públicas: 10 da V1 e 4 reservadas para a versão futura.
 
-## Requisitos
+A Etapa 3 não foi iniciada. Não existem autenticação, módulos de negócio, migrations, frontend ou alterações no schema.
 
-- Node.js e npm instalados.
-- Um arquivo `.env` local criado a partir de `.env.example`.
-
-## Instalação e execução
+## Instalação e configuração
 
 No PowerShell, a partir da pasta `backend`:
 
 ```powershell
-Copy-Item .env.example .env
 npm install
-npm test
-npm start
+Copy-Item .env.example .env
 ```
 
-O servidor usa a porta `3000` por padrão. A verificação de disponibilidade fica em:
+Preencha o `.env` com os dados da instalação local. Nunca envie esse arquivo ao Git.
+
+```dotenv
+BANCO_HOST=localhost
+BANCO_PORTA=5432
+BANCO_USUARIO=seu_usuario_postgresql
+BANCO_SENHA=sua_senha_postgresql
+BANCO_NOME=sistema_contatos
+BANCO_TEMPO_LIMITE_CONEXAO_MS=5000
+```
+
+Depois, valide a conexão e as tabelas:
+
+```powershell
+npm run banco:verificar
+```
+
+O comando executa somente `SELECT NOW()` e uma consulta em `information_schema.tables`. Ele não cria, remove nem altera estruturas.
+
+## Variáveis de ambiente
+
+| Variável | Exemplo | Finalidade |
+| --- | --- | --- |
+| `PORTA` | `3000` | Porta usada pelo servidor HTTP. |
+| `ORIGENS_CORS` | lista separada por vírgula | Origens oficiais permitidas. Vazia bloqueia origens de navegador. |
+| `LIMITE_JSON` | `100kb` | Tamanho máximo aceito para corpos JSON. |
+| `LIMITE_REQUISICOES_JANELA_MS` | `900000` | Janela global do rate limit, em milissegundos. |
+| `LIMITE_REQUISICOES_MAXIMO` | `100` | Máximo de requisições por cliente dentro da janela. |
+| `BANCO_HOST` | `localhost` | Host do servidor PostgreSQL. |
+| `BANCO_PORTA` | `5432` | Porta do PostgreSQL. |
+| `BANCO_USUARIO` | `seu_usuario_postgresql` | Usuário usado pelo pool. |
+| `BANCO_SENHA` | `sua_senha_postgresql` | Senha local. Deve existir somente no `.env`. |
+| `BANCO_NOME` | `sistema_contatos` | Nome do banco acessado pelo backend. |
+| `BANCO_TEMPO_LIMITE_CONEXAO_MS` | `5000` | Tempo máximo para estabelecer uma conexão. |
+
+O `.env.example` contém apenas valores de exemplo. O `.env` está protegido pelas regras de `.gitignore`.
+
+## Conexão PostgreSQL
+
+O pacote `pg` fornece o cliente PostgreSQL para Node.js. Nesta etapa ele é usado para:
+
+- manter um pool de conexões em `src/configuracoes/banco.js`;
+- testar disponibilidade com `SELECT NOW()`;
+- consultar `information_schema.tables` com parâmetro para o schema `public`;
+- encerrar o pool de forma controlada no comando de diagnóstico.
+
+Os logs do banco registram somente uma descrição genérica e o código técnico do erro. Senha, string completa de conexão e SQL não são registrados.
+
+## Estrutura verificada
+
+O script oficial define exatamente 14 tabelas públicas.
+
+Tabelas da V1:
+
+- `usuarios`
+- `bairros`
+- `problemas`
+- `origens_listas`
+- `contatos`
+- `importacoes`
+- `importacao_itens`
+- `consentimentos`
+- `tentativas_contato`
+- `historico_alteracoes`
+
+Tabelas reservadas para a versão futura, cuja existência é apenas verificada:
+
+- `campanhas`
+- `campanha_destinatarios`
+- `sessoes_whatsapp`
+- `mensagens_whatsapp`
+
+Não foi criado código de negócio para nenhuma tabela futura.
+
+## Rota de saúde
 
 ```text
 GET http://localhost:3000/saude
 ```
 
-Resposta esperada:
+Com o banco disponível, responde HTTP 200:
 
 ```json
 {
-  "status": "ok"
+  "status": "ok",
+  "aplicacao": "disponivel",
+  "bancoDados": "disponivel"
 }
 ```
 
-A rota apenas confirma que o processo HTTP está disponível. Ela não consulta o banco nesta etapa.
+Com o banco indisponível, responde HTTP 503:
 
-## Variáveis de ambiente
-
-| Variável | Padrão | Finalidade |
-| --- | --- | --- |
-| `PORTA` | `3000` | Porta usada pelo servidor HTTP. |
-| `ORIGENS_CORS` | lista vazia | Origens oficiais permitidas, separadas por vírgula. |
-| `LIMITE_JSON` | `100kb` | Tamanho máximo aceito para corpos JSON. |
-| `LIMITE_REQUISICOES_JANELA_MS` | `900000` | Janela global do rate limit, em milissegundos. |
-| `LIMITE_REQUISICOES_MAXIMO` | `100` | Máximo de requisições por cliente dentro da janela. |
-
-Quando `ORIGENS_CORS` fica vazia, requisições feitas por navegadores com cabeçalho `Origin` são recusadas. Requisições sem `Origin`, como monitoramento do servidor e chamadas de terminal, continuam permitidas. Os domínios oficiais deverão ser informados explicitamente no `.env`; não há liberação genérica com `*`.
-
-Exemplo com mais de uma origem:
-
-```dotenv
-ORIGENS_CORS=https://contatos.exemplo.gov.br,https://www.exemplo.gov.br
+```json
+{
+  "status": "degradado",
+  "aplicacao": "disponivel",
+  "bancoDados": "indisponivel"
+}
 ```
 
-## Dependências instaladas na Etapa 1
+A resposta não expõe credenciais, consulta SQL, códigos do PostgreSQL ou detalhes internos.
+
+## Dependências diretas
 
 ### Produção
 
-| Dependência | Finalidade nesta etapa |
+| Dependência | Finalidade |
 | --- | --- |
-| `express` | Cria o servidor HTTP, registra middlewares e expõe `GET /saude`. |
-| `dotenv` | Carrega as configurações locais do arquivo `.env`. |
-| `helmet` | Aplica cabeçalhos HTTP de segurança. |
-| `cors` | Aceita somente as origens configuradas explicitamente. |
-| `express-rate-limit` | Aplica um limite global básico contra excesso de requisições. |
+| `express` | Servidor HTTP, rotas e middlewares. |
+| `dotenv` | Carregamento do `.env` local. |
+| `helmet` | Cabeçalhos HTTP de segurança. |
+| `cors` | Restrição das origens autorizadas. |
+| `express-rate-limit` | Proteção básica contra excesso de requisições. |
+| `pg` | Pool, conexão e consultas parametrizadas no PostgreSQL. |
 
 ### Desenvolvimento e testes
 
-| Dependência | Finalidade nesta etapa |
+| Dependência | Finalidade |
 | --- | --- |
-| `jest` | Executa os testes automatizados unitários e de integração. |
-| `supertest` | Exercita as rotas Express e verifica respostas HTTP sem abrir uma porta real. |
-
-As dependências `pg`, `bcrypt`, `jsonwebtoken`, `zod`, `multer`, `csv-parse`, `xlsx`, `pino`, `pino-http` e `nodemon` não foram instaladas porque ainda não são necessárias para a fundação. Elas só devem ser avaliadas nas etapas em que seu uso for autorizado.
-
-## Segurança e erros
-
-A fundação inclui:
-
-- remoção do cabeçalho `X-Powered-By`;
-- cabeçalhos seguros com Helmet;
-- CORS por lista explícita de origens;
-- limite configurável do corpo JSON;
-- rate limit global básico;
-- `AppError` para erros operacionais;
-- middleware `tratarErro` com mensagens públicas controladas;
-- resposta JSON para rotas inexistentes;
-- ocultação dos detalhes de erros internos.
-
-Formato de erro público:
-
-```json
-{
-  "erro": {
-    "mensagem": "Mensagem segura para o cliente."
-  }
-}
-```
-
-## Estrutura
-
-```text
-backend/
-  src/
-    configuracoes/
-    erros/
-    middlewares/
-    modulos/
-      autenticacao/
-      usuarios/
-      bairros/
-      problemas/
-      origens/
-      contatos/
-      formularioPublico/
-      importacoes/
-      consentimentos/
-      tentativas/
-      relatorios/
-      auditoria/
-      saude/
-    utilitarios/
-    app.js
-    server.js
-  testes/
-    unitarios/
-    integracao/
-  uploads/
-  .env.example
-  .gitignore
-  package.json
-  package-lock.json
-  README.md
-  STATUS_PROJETO.md
-```
-
-Os diretórios dos domínios futuros contêm somente arquivos `.gitkeep`. Nenhuma rota, validação, consulta ou regra de negócio desses domínios foi antecipada.
+| `jest` | Testes unitários e de integração. |
+| `supertest` | Testes HTTP das rotas Express sem abrir porta real. |
 
 ## Testes
 
@@ -147,28 +146,42 @@ npm test
 npm run test:coverage
 ```
 
-Os testes da fundação cobrem:
+A suíte cobre:
 
-- contrato de `GET /saude`;
-- cabeçalhos do Helmet e remoção de `X-Powered-By`;
-- origem CORS permitida e origem recusada;
-- corpo JSON acima do limite e JSON malformado;
-- rate limiting;
-- rota inexistente;
-- comportamento de `AppError`;
-- respostas públicas do middleware `tratarErro`.
+- conexão válida;
+- falha de conexão e proteção contra vazamento da senha;
+- verificação exata das 10 tabelas V1 e das 4 futuras;
+- detecção de estrutura incompleta;
+- `/saude` com banco disponível;
+- `/saude` com falha simulada;
+- todos os testes de segurança e tratamento de erros da fundação.
 
-Resultado atual: 4 suítes e 11 testes aprovados. A cobertura total medida foi de 94,52% das instruções e 94,52% das linhas.
+Resultado após a correção da Etapa 2: 5 suítes e 16 testes aprovados. A cobertura medida foi de 81,06% das instruções e linhas.
 
 ## Scripts npm
 
 | Script | Ação |
 | --- | --- |
 | `npm start` | Inicia `src/server.js`. |
+| `npm run banco:verificar` | Testa a conexão e confirma as 14 tabelas públicas sem alterar o banco. |
 | `npm test` | Executa todos os testes uma vez. |
 | `npm run test:watch` | Reexecuta testes durante alterações locais. |
-| `npm run test:coverage` | Executa os testes e gera o relatório de cobertura em `coverage/`. |
+| `npm run test:coverage` | Executa os testes e gera o relatório em `coverage/`. |
+
+## Comandos executados na Etapa 2
+
+```text
+npm install pg
+node --check <arquivos JavaScript de src e testes>
+npm test
+npm install
+npm run test:coverage
+npm run banco:verificar
+psql ... -c "SELECT 1 AS conexao_valida;"
+```
+
+A primeira tentativa confirmou que o PostgreSQL exige senha. Após a configuração local do `.env`, o comando confirmou conexão disponível, 14/14 tabelas públicas, 10/10 tabelas V1, 4/4 tabelas futuras e estrutura válida. Nenhuma credencial foi impressa, e nenhuma instrução de alteração do banco foi executada.
 
 ## Limite da etapa
 
-A Etapa 2 não foi iniciada. O backend ainda não importa `pg`, não abre conexão com `sistema_contatos` e não verifica as 14 tabelas. Qualquer avanço depende de aprovação explícita.
+Não foram criadas migrations nem executados `CREATE TABLE`, `ALTER TABLE` ou `DROP TABLE`. O script SQL oficial não foi alterado. A Etapa 3 permanece bloqueada até aprovação explícita.

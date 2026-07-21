@@ -1,10 +1,23 @@
 const request = require('supertest');
 const { criarApp } = require('../../src/app');
 
+// Mantem os testes de seguranca independentes da disponibilidade do PostgreSQL local.
+async function simularBancoDisponivel() {
+  return { disponivel: true };
+}
+
+// Cria o aplicativo com a conexao de banco controlada pelo teste.
+function criarAppParaTeste(opcoes) {
+  return criarApp({
+    ...(opcoes || {}),
+    testarConexaoBanco: simularBancoDisponivel
+  });
+}
+
 describe('Seguranca HTTP da fundacao', function testarSeguranca() {
   test('aceita somente uma origem CORS configurada', async function executarTeste() {
     const origemOficial = 'https://sistema.exemplo';
-    const app = criarApp({ origensCors: [origemOficial] });
+    const app = criarAppParaTeste({ origensCors: [origemOficial] });
 
     const respostaPermitida = await request(app)
       .get('/saude')
@@ -24,7 +37,7 @@ describe('Seguranca HTTP da fundacao', function testarSeguranca() {
   });
 
   test('recusa corpo JSON acima do limite configurado', async function executarTeste() {
-    const app = criarApp({ limiteJson: '100b' });
+    const app = criarAppParaTeste({ limiteJson: '100b' });
     const resposta = await request(app)
       .post('/rota-inexistente')
       .send({ conteudo: 'a'.repeat(200) });
@@ -36,7 +49,7 @@ describe('Seguranca HTTP da fundacao', function testarSeguranca() {
   });
 
   test('recusa corpo JSON malformado', async function executarTeste() {
-    const app = criarApp();
+    const app = criarAppParaTeste();
     const resposta = await request(app)
       .post('/rota-inexistente')
       .set('Content-Type', 'application/json')
@@ -47,7 +60,7 @@ describe('Seguranca HTTP da fundacao', function testarSeguranca() {
   });
 
   test('limita a quantidade de requisicoes por cliente', async function executarTeste() {
-    const app = criarApp({
+    const app = criarAppParaTeste({
       janelaRateLimitMs: 60 * 1000,
       maximoRequisicoes: 2
     });
@@ -63,7 +76,7 @@ describe('Seguranca HTTP da fundacao', function testarSeguranca() {
   });
 
   test('responde 404 em JSON para uma rota inexistente', async function executarTeste() {
-    const app = criarApp();
+    const app = criarAppParaTeste();
     const resposta = await request(app).get('/nao-existe');
 
     expect(resposta.status).toBe(404);

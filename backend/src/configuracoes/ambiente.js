@@ -44,7 +44,18 @@ const ambiente = Object.freeze({
   maximoRequisicoes: obterInteiroPositivo(
     process.env.LIMITE_REQUISICOES_MAXIMO,
     100
-  )
+  ),
+  banco: Object.freeze({
+    host: process.env.BANCO_HOST || '',
+    porta: obterInteiroPositivo(process.env.BANCO_PORTA, 5432),
+    usuario: process.env.BANCO_USUARIO || '',
+    senha: process.env.BANCO_SENHA || '',
+    nome: process.env.BANCO_NOME || '',
+    tempoLimiteConexaoMs: obterInteiroPositivo(
+      process.env.BANCO_TEMPO_LIMITE_CONEXAO_MS,
+      5000
+    )
+  })
 });
 
 module.exports = ambiente;

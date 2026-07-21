@@ -1,8 +1,14 @@
 const express = require('express');
-const saudeController = require('./saudeController');
+const { criarSaudeController } = require('./saudeController');
 
-const saudeRoutes = express.Router();
+// Monta a rota de saude com as dependencias definidas pela aplicacao.
+function criarSaudeRoutes(dependencias) {
+  const saudeRoutes = express.Router();
+  const saudeController = criarSaudeController(dependencias);
 
-saudeRoutes.get('/saude', saudeController.consultarSaude);
+  saudeRoutes.get('/saude', saudeController.consultarSaude);
 
-module.exports = saudeRoutes;
+  return saudeRoutes;
+}
+
+module.exports = criarSaudeRoutes;

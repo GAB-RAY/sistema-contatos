@@ -4,8 +4,9 @@ const cors = require('cors');
 const { rateLimit } = require('express-rate-limit');
 
 const ambiente = require('./configuracoes/ambiente');
+const { testarConexaoBanco } = require('./configuracoes/banco');
 const criarOpcoesCors = require('./configuracoes/cors');
-const saudeRoutes = require('./modulos/saude/saudeRoutes');
+const criarSaudeRoutes = require('./modulos/saude/saudeRoutes');
 const tratarRotaNaoEncontrada = require('./middlewares/tratarRotaNaoEncontrada');
 const tratarErro = require('./middlewares/tratarErro');
 
@@ -15,7 +16,8 @@ function obterConfiguracao(opcoes) {
     origensCors: opcoes.origensCors || ambiente.origensCors,
     limiteJson: opcoes.limiteJson || ambiente.limiteJson,
     janelaRateLimitMs: opcoes.janelaRateLimitMs || ambiente.janelaRateLimitMs,
-    maximoRequisicoes: opcoes.maximoRequisicoes || ambiente.maximoRequisicoes
+    maximoRequisicoes: opcoes.maximoRequisicoes || ambiente.maximoRequisicoes,
+    testarConexaoBanco: opcoes.testarConexaoBanco || testarConexaoBanco
   };
 }
 
@@ -42,7 +44,9 @@ function criarApp(opcoes) {
   }));
   app.use(express.json({ limit: configuracao.limiteJson }));
 
-  app.use(saudeRoutes);
+  app.use(criarSaudeRoutes({
+    testarConexaoBanco: configuracao.testarConexaoBanco
+  }));
 
   app.use(tratarRotaNaoEncontrada);
   app.use(tratarErro);
