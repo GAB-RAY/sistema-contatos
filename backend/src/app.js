@@ -6,7 +6,9 @@ const { rateLimit } = require('express-rate-limit');
 const ambiente = require('./configuracoes/ambiente');
 const { testarConexaoBanco } = require('./configuracoes/banco');
 const criarOpcoesCors = require('./configuracoes/cors');
+const criarAutenticacaoRoutes = require('./modulos/autenticacao/autenticacaoRoutes');
 const criarSaudeRoutes = require('./modulos/saude/saudeRoutes');
+const criarUsuarioRoutes = require('./modulos/usuarios/usuarioRoutes');
 const tratarRotaNaoEncontrada = require('./middlewares/tratarRotaNaoEncontrada');
 const tratarErro = require('./middlewares/tratarErro');
 
@@ -17,7 +19,9 @@ function obterConfiguracao(opcoes) {
     limiteJson: opcoes.limiteJson || ambiente.limiteJson,
     janelaRateLimitMs: opcoes.janelaRateLimitMs || ambiente.janelaRateLimitMs,
     maximoRequisicoes: opcoes.maximoRequisicoes || ambiente.maximoRequisicoes,
-    testarConexaoBanco: opcoes.testarConexaoBanco || testarConexaoBanco
+    testarConexaoBanco: opcoes.testarConexaoBanco || testarConexaoBanco,
+    loginJanelaMs: opcoes.loginJanelaMs || ambiente.autenticacao.loginJanelaMs,
+    loginMaximo: opcoes.loginMaximo || ambiente.autenticacao.loginMaximo
   };
 }
 
@@ -47,6 +51,11 @@ function criarApp(opcoes) {
   app.use(criarSaudeRoutes({
     testarConexaoBanco: configuracao.testarConexaoBanco
   }));
+  app.use('/autenticacao', criarAutenticacaoRoutes({
+    loginJanelaMs: configuracao.loginJanelaMs,
+    loginMaximo: configuracao.loginMaximo
+  }));
+  app.use('/usuarios', criarUsuarioRoutes());
 
   app.use(tratarRotaNaoEncontrada);
   app.use(tratarErro);

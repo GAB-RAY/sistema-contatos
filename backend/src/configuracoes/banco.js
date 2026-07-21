@@ -187,6 +187,7 @@ async function encerrarPoolBanco() {
 module.exports = {
   TABELAS_V1,
   TABELAS_FUTURAS,
+  obterPoolBanco,
   testarConexaoBanco,
   verificarTabelasBanco,
   encerrarPoolBanco

@@ -2,127 +2,161 @@
 
 ## Etapa atual
 
-**Etapa 2 — Conexão e verificação das 14 tabelas: concluída e aguardando aprovação.**
+**Etapa 3 — Autenticação e Usuários: concluída e aguardando aprovação.**
 
-A Etapa 3 não foi iniciada.
+A Etapa 4 não foi iniciada.
 
-## Entregas da Etapa 2
+## Entregas concluídas
 
-- [x] `.env` local criado e mantido fora do Git.
-- [x] `.env.example` atualizado sem senha real.
-- [x] Variáveis explícitas para host, porta, usuário, senha e nome do banco.
-- [x] Pacote `pg` instalado.
-- [x] Pool configurado em `src/configuracoes/banco.js`.
-- [x] Tratamento de erros sem credenciais ou string de conexão nos logs.
-- [x] Função nomeada `testarConexaoBanco` implementada com `SELECT NOW()`.
-- [x] Função `verificarTabelasBanco` implementada com consulta a `information_schema.tables`.
-- [x] Validação exata das 10 tabelas V1 e das 4 tabelas futuras.
-- [x] Comando `npm run banco:verificar` criado.
-- [x] Rota `GET /saude` atualizada com estado da aplicação e do banco.
-- [x] Resposta HTTP 503 segura quando o banco está indisponível.
-- [x] Testes obrigatórios implementados.
-- [x] README e status atualizados.
-- [x] Conexão real e confirmação das 14 tabelas no PostgreSQL local.
+### Autenticação
 
-## Tabelas esperadas
+- [x] Módulo `autenticacao` com Routes, Controller, Service, Model e Validação.
+- [x] Login por e-mail e senha.
+- [x] Verificação de conta ativa.
+- [x] Comparação de senha com bcrypt.
+- [x] Geração de JWT configurada exclusivamente por `JWT_SECRET`.
+- [x] Resposta de login sem `senha_hash`.
+- [x] Mensagem genérica para credenciais inválidas e conta inativa.
+- [x] Rate limit específico para login.
 
-### V1 — 10 tabelas
+### Autorização
 
-`usuarios`, `bairros`, `problemas`, `origens_listas`, `contatos`, `importacoes`, `importacao_itens`, `consentimentos`, `tentativas_contato` e `historico_alteracoes`.
+- [x] `verificarToken` implementado sem importar `tratarErro`.
+- [x] Leitura e separação de `Bearer TOKEN`.
+- [x] `jwt.verify` e criação de `req.usuario`.
+- [x] Erros encaminhados com `AppError` e `next(erro)`.
+- [x] `verificarPerfil` compatível com administrador e operador.
+- [x] Rotas administrativas bloqueadas para operador.
 
-### Futuras — 4 tabelas
+### Usuários
 
-`campanhas`, `campanha_destinatarios`, `sessoes_whatsapp` e `mensagens_whatsapp`.
+- [x] Módulo `usuarios` com Routes, Controller, Service, Model e Validação.
+- [x] Listagem e busca por id.
+- [x] Criação com hash bcrypt.
+- [x] Edição de nome, e-mail e perfil.
+- [x] Ativação e desativação.
+- [x] Troca de senha com novo hash.
+- [x] Proteção contra e-mail duplicado.
+- [x] Perfis restritos a `administrador` e `operador`.
+- [x] Consultas e respostas sem exposição de `senha_hash`.
+- [x] Proteção transacional do último administrador ativo.
+- [x] Proteção da própria conta quando ela é o último administrador ativo.
 
-A implementação somente verifica a existência dessas quatro tabelas. Nenhuma regra de negócio foi criada para elas.
+### Primeiro administrador
 
-## Validações executadas
+- [x] Comando local `npm run admin:criar`.
+- [x] Nenhuma rota pública permanente criada.
+- [x] Senha recebida por variável temporária de processo.
+- [x] Zod e bcrypt aplicados antes da gravação.
+- [x] Transação e bloqueio concorrente.
+- [x] Segunda criação recusada quando já existe qualquer usuário.
+- [x] Procedimento documentado sem credenciais reais.
 
-### Inspeção do script oficial
+### Validação e segurança
 
-- Confirmadas 14 instruções `CREATE TABLE` no arquivo oficial, sem executá-lo.
-- Confirmadas 10 tabelas V1 e 4 tabelas reservadas para a versão futura.
-- O script permaneceu inalterado.
+- [x] Zod aplicado a body, params e query.
+- [x] SQL parametrizado.
+- [x] Nenhuma arrow function em `src` ou nos testes da etapa.
+- [x] Sem senha ou token em logs.
+- [x] Sem stack trace nas respostas.
+- [x] Custo bcrypt padrão 12 e intervalo seguro de 10 a 14.
+- [x] `.env.example` atualizado.
+- [x] `.env` confirmado fora do Git.
+- [x] `JWT_SECRET` forte preenchido no `.env` local e validado em execução real.
 
-### Primeira execução da suíte
+## Testes executados
 
-- 16 arquivos JavaScript aprovados pelo `node --check`.
-- `npm test`: 5 suítes, 16 testes aprovados e 0 falhas.
-- Foi identificado um registro duplicado de `pg` no `package.json`.
+### Primeira execução ampliada
 
-### Correção
+- 35 arquivos JavaScript aprovados pelo `node --check`.
+- 10 suítes aprovadas.
+- 44 testes aprovados.
+- 0 falhas.
 
-- Removida a chave antiga duplicada.
-- Mantida somente a versão de `pg` efetivamente instalada.
-- Manifesto e lockfile sincronizados com `npm install`.
+### Segunda execução com cobertura
 
-### Segunda execução da suíte
+- 10 suítes aprovadas.
+- 44 testes aprovados.
+- 0 falhas.
+- A revisão identificou que rotas sem conteúdo poderiam declarar explicitamente os objetos vazios de body e params.
 
-- `npm run test:coverage`: 5 suítes, 16 testes aprovados e 0 falhas.
-- Cobertura: 81,06% das instruções, 73,33% dos ramos, 73,33% das funções e 81,06% das linhas.
+### Ajuste de validação
 
-### Teste da falha real de configuração
+- Body, params e query passaram a ser declarados com Zod em todas as rotas da Etapa 3.
+- Campos inesperados são recusados.
+- Foram adicionados testes HTTP de criação, busca, edição, ativação, desativação e senha.
 
-- `npm run banco:verificar` executado com `BANCO_SENHA` vazia.
-- O comando informou conexão indisponível e retornou código de saída 1.
-- O processo não foi encerrado silenciosamente.
-- Nenhuma senha, string de conexão ou SQL foi exposto.
+### Execução após o ajuste
 
-### Validação real do PostgreSQL
+- 10 suítes aprovadas.
+- 48 testes aprovados.
+- 0 falhas.
+- Cobertura: 78,43% das instruções, 61,70% dos ramos, 76,54% das funções e 78,43% das linhas.
+- Confirmado por teste HTTP que não existe rota pública para criar o administrador inicial.
+- Confirmado que o comando de bootstrap encerra com erro claro quando os dados obrigatórios não são fornecidos.
 
-- `npm run banco:verificar` executado após a configuração local da senha.
-- Conexão com PostgreSQL: disponível.
-- Tabelas públicas: 14/14.
-- Tabelas V1: 10/10.
-- Tabelas futuras: 4/4, com somente a existência verificada.
-- Estrutura do banco: válida.
-- Nenhuma tabela extra ou ausente.
+### Validação real do JWT e da autorização
 
-### Validação HTTP com o banco real
-
-- Aplicação iniciada temporariamente na porta 3188.
-- Requisição real enviada para `GET /saude`.
-- Resultado: HTTP 200 com aplicação e banco disponíveis.
-- Nenhuma credencial, SQL ou detalhe interno apareceu na resposta.
+- `JWT_SECRET` local confirmado sem exibir seu conteúdo.
+- Segredo com tamanho mínimo de segurança confirmado.
+- JWT temporário assinado e validado em memória.
+- `GET /usuarios` executado com perfil administrador contra o PostgreSQL real.
+- Resultado: HTTP 200 e lista vazia, coerente com a tabela `usuarios` sem registros.
+- Token ausente da resposta.
+- Nenhum usuário criado ou alterado.
 
 ### Regressão final
 
-- 16 arquivos JavaScript aprovados pelo `node --check`.
-- `npm test`: 5 suítes, 16 testes aprovados e 0 falhas.
-- `npm audit`: 0 vulnerabilidades encontradas.
-- `git diff --check`: nenhuma inconsistência encontrada.
-- `.env` confirmado como ignorado pelo Git.
+- 35 arquivos JavaScript aprovados pelo `node --check`.
+- Nenhuma arrow function encontrada em `src` ou nos testes.
+- 10 suítes e 48 testes aprovados, com 0 falhas.
+- PostgreSQL disponível e estrutura válida com 14/14 tabelas.
+- Nenhum SQL de criação, remoção ou alteração de estrutura encontrado em `src`.
 - Script SQL oficial confirmado como inalterado.
+- `.env` confirmado como ignorado pelo Git.
+- `git diff --check` aprovado.
+- `npm audit`: 0 vulnerabilidades.
+
+### PostgreSQL real
+
+- Conexão disponível.
+- Estrutura preservada com 14/14 tabelas.
+- Tabela `usuarios`: 0 registros.
+- Administradores ativos: 0.
+- Nenhum usuário de teste persistido.
+- Nenhuma estrutura criada, removida ou modificada.
 
 ### Dependências
 
-- `pg@8.22.0` instalado como dependência de produção.
-- Auditoria npm: 0 vulnerabilidades encontradas.
+- `bcrypt@6.0.0`
+- `jsonwebtoken@9.0.3`
+- `zod@4.4.3`
+- Auditoria executada durante a instalação: 0 vulnerabilidades.
 
 ## Comandos registrados
 
 ```text
-npm install pg
+npm install bcrypt jsonwebtoken zod
 node --check <arquivos JavaScript de src e testes>
 npm test
-npm install
 npm run test:coverage
 npm run banco:verificar
-psql ... -c "SELECT 1 AS conexao_valida;"
+psql ... SELECT COUNT(*) FROM usuarios
 ```
 
 ## Proibições respeitadas
 
-- nenhuma migration criada;
-- nenhum `CREATE TABLE`, `DROP TABLE` ou `ALTER TABLE` executado;
+- nenhuma tabela criada ou alterada;
 - script SQL oficial não alterado;
-- banco existente não recriado;
-- autenticação não iniciada;
-- módulos de negócio não implementados;
+- bairros, problemas e origens não iniciados;
+- formulário público não iniciado;
+- importações não iniciadas;
 - frontend não criado;
-- tabelas futuras não receberam código de negócio;
-- Etapa 3 não iniciada.
+- WhatsApp, campanhas e chatbox não implementados;
+- Etapa 4 não iniciada.
 
 ## Próximo marco bloqueado por aprovação
 
-A Etapa 3 prevê autenticação e usuários. Nenhum trabalho desse marco deve começar antes da autorização explícita do responsável pelo projeto.
+A Etapa 4 prevê bairros, problemas e origens. Nenhum trabalho desse marco deve começar antes da autorização explícita do responsável pelo projeto.
+
+O primeiro administrador não foi criado durante a implementação porque nome, e-mail e senha reais pertencem ao responsável pelo sistema. O comando seguro está pronto e documentado para execução consciente.
